@@ -17,7 +17,7 @@ data = [
     }
 ]
 
-let scale = d3.scaleLinear().domain([0,100000]).range([0,400])
+let scale = d3.scaleLinear().domain([0,100000]).range([0,351])
 
 function newtonsMethod(fn, fnPrime, startingValue, precision = 0.0001) {
     let delta = Infinity;
@@ -36,22 +36,22 @@ let height = 600;
 let width = 600;
 
 let margin = {
-    top: 20,
+    top: 38,
     right: 20,
     bottom: 20,
-    left: 20
+    left: 15
 }
 
 let chartHeight = height - margin.top - margin.bottom;
 let chartWidth = width - margin.left - margin.right;
 
 
-let w = 17.5 //36
-let lineWidth = 7; //24
-let r0 = 30;
+let lineWidth = 10; //24
+let w = 21.5 //36
+let r0 = 19.5;
 //let L = scale(734952);
 //let L = scale(665000);
-let L = scale(680000)
+let L = scale(648000)
 
 function r(t) {
     return r0 + w/(2 * Math.PI) * t;
@@ -108,7 +108,7 @@ getThetas = function(L, r0) {
             let theta0 = binarySearch(t => l(t, theta1), L, [0, theta1])
             if (r(theta0) > r0) return [theta0, theta1]
         }
-        c_i++;
+        c_i += 2;
     }
 }
 
@@ -117,25 +117,26 @@ thetas = getThetas(L, r0)
 const svg = d3.select("#chartSvg")
     .attr('height', height)
     .attr('width', width)
+    // .style('background-image', 'url(original.png)')
 
 const g = svg.append('g')
     .attr('transform', `translate(${margin.left},${margin.top})`)
 
 let bar1 = g.append('path')
     .attr('d', `M0,0 l${scale(78139)} 0`)
-    .style('stroke-width', '7px')
+    .style('stroke-width', `${lineWidth}px`)
     .attr('stroke', '#5a836c')
     .attr('stroke-linecap', "square")
 
 let bar2 = g.append('path')
     .attr('d', `M${scale(78139)} 0 l${-scale(8025) * 1/Math.sqrt(2)} ${scale(8025) * 1/Math.sqrt(2)}`)
-    .style('stroke-width', '7px')
+    .style('stroke-width', `${lineWidth}px`)
     .style('stroke', '#4e6cad')
     .attr('stroke-linecap', "square")
 
 let bar3 = g.append('path')
     .attr('d', `M${scale(78139) -scale(8025) * 1/Math.sqrt(2)} ${scale(8025) * 1/Math.sqrt(2)} l${scale(37699) * 1/Math.sqrt(2)} ${scale(37699) * 1/Math.sqrt(2)}`)
-    .style('stroke-width', '7px')
+    .style('stroke-width', `${lineWidth}px`)
     .style('stroke', '#f7b414')
     .attr('stroke-linecap', "square")
 
@@ -144,13 +145,9 @@ let bar4 = g.append('path')
     .attr('d', `M${scale(78139) -scale(8025) * 1/Math.sqrt(2) + scale(37699) * 1/Math.sqrt(2)} ${scale(8025) * 1/Math.sqrt(2) + scale(37699) * 1/Math.sqrt(2)}` + 
 //               `l${-scale(734952) * 1/Math.sqrt(2)} ${scale(734952) * 1/Math.sqrt(2)}`)
                `l${-(scale(734952) - L) * 1/Math.sqrt(2)} ${(scale(734952) - L) * 1/Math.sqrt(2)}`)
-    .style('stroke-width', '7px')
+    .style('stroke-width', `${lineWidth}px`)
     .style('stroke', '#db2a46')
     .attr('stroke-linecap', "square")
-
-// let radius = d3.scaleLinear()
-//     .domain([0, 100000])
-//     .range([0, chartWidth / 4])
 
 let line = d3.lineRadial()
     .radius(d => d[1])
@@ -158,14 +155,16 @@ let line = d3.lineRadial()
 
 let spiralPoints = d3.range(thetas[0], thetas[1], .01).map(t => [-t, r(t)])
 
-let spiralCenterX = scale(78139) -scale(8025) * 1/Math.sqrt(2) + scale(37699) * 1/Math.sqrt(2) + -(scale(734952) - L) * 1/Math.sqrt(2) - r(thetas[1]) * Math.cos(thetas[1])
-let spiralCenterY = scale(8025) * 1/Math.sqrt(2) + scale(37699) * 1/Math.sqrt(2) + (scale(734952) - L) * 1/Math.sqrt(2) - r(thetas[1]) * Math.sin(thetas[1])
+let spiralCenterX = scale(78139) -scale(8025) * 1/Math.sqrt(2) + scale(37699) * 1/Math.sqrt(2) + -(scale(734952) - L) * 1/Math.sqrt(2) + r(thetas[1]) * Math.cos(thetas[1])
+let spiralCenterY = scale(8025) * 1/Math.sqrt(2) + scale(37699) * 1/Math.sqrt(2) + (scale(734952) - L) * 1/Math.sqrt(2) + r(thetas[1]) * Math.sin(thetas[1])
 
 let spiral = g.append("path")
 	.datum(spiralPoints)
 	.attr("d", line)
     .attr('fill','none')
-    .style('stroke-width', '7px')
+    .style('stroke-width', `${lineWidth}px`)
     .style('stroke', '#db2a46')
+    // .style('stroke', 'black')
+    // .style('opacity', 0.5)
     //.attr('transform', `translate(${chartWidth/2 + 10 },${418})`)
-    .attr('transform', `translate(${spiralCenterX},${spiralCenterY})`)
+    .attr('transform', `translate(${spiralCenterX},${spiralCenterY}) rotate(180)`)
