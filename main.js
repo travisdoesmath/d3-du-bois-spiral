@@ -17,48 +17,19 @@ data = [
     }
 ]
 
-var spiralArcLength = function(theta) {
-	return 0.5 * (theta * Math.sqrt(1 + theta**2) + Math.log(theta + Math.sqrt(1 + theta**2)));
-}
-
-var spiralArcLengthDerivative = function(theta) {
-	return (1 + theta**2) / Math.sqrt(1 + theta**2);
-}
-
-var spiralInverseArcLength = function(length) {
-	length = length * scaleFactor;
-	var x = Math.sqrt(8*length + 5) * 0.5 - 0.5,
-		delta = Infinity,
-		precision = 0.0001;
-
-	while (Math.abs(delta) > precision) {
-		var newX = x - (spiralArcLength(x) - length)/spiralArcLengthDerivative(x);
-		delta = newX - x;
-		x = newX;
-	}
-
-	return x;
-}
+let scale = d3.scaleLinear().domain([0,100000]).range([0,400])
 
 function newtonsMethod(fn, fnPrime, startingValue, precision = 0.0001) {
     let delta = Infinity;
     let x = startingValue
-    while (delta > precision) {
+    for (let i = 0; i < 10; i++) {
         let newX = x - fn(x) / fnPrime(x)
         delta = Math.abs(newX - x);
         x = newX;
     }
-
+    
     return x;
 }
-
-function getInverse(fn, fnPrime, y) {
-    newFn = x => fn - x
-    return newtonsMethod(newFn, fnPrime, y)
-}
-
-testFn = x => x**2 - 2
-testFnPrime = x => 2*x
 
 
 let height = 600;
@@ -74,6 +45,75 @@ let margin = {
 let chartHeight = height - margin.top - margin.bottom;
 let chartWidth = width - margin.left - margin.right;
 
+
+let w = 17.5 //36
+let lineWidth = 7; //24
+let r0 = 30;
+//let L = scale(734952);
+//let L = scale(665000);
+let L = scale(680000)
+
+function r(t) {
+    return r0 + w/(2 * Math.PI) * t;
+}
+
+function l(t1, t2) {
+    let a = r0;
+    let b = w / (2*Math.PI);
+    let I = t => 0.5 * ((a + b * t) * Math.sqrt((a + b * t)**2 + b**2)/b + b * Math.log((a + b*t) + Math.sqrt((a + b * t)**2 + b**2)))
+    return I(t2) - I(t1);
+} 
+
+// get theta0 and theta1
+thetaFn = t => Math.sin(Math.PI/4 + t) - (2*Math.PI*r0 / w + t) * Math.sin(Math.PI/4 - t)
+thetaFnPrime = t => Math.cos(Math.PI/4 + t) - Math.sin(Math.PI/4 - t) + (2*Math.PI*r0 / w + t) * Math.cos(Math.PI/4 - t)
+
+function binarySearch(f, targetValue, interval, precision = 0.0001) {
+    if (Math.abs(interval[1] - interval[0]) < precision) return 0.5 * (interval[0] + interval[1]);
+
+    // assuming f is monotonic on interval
+    y0 = f(interval[0])
+    y1 = f(0.5*(interval[0] + interval[1]))
+    y2 = f(interval[1])
+    if (y2 > y0) {
+        // f is increasing
+        if (targetValue > y2 || targetValue < y0) throw 'no solution on interval'
+        if (targetValue < y1) {
+            return binarySearch(f, targetValue, [interval[0], 0.5 * (interval[0] + interval[1])], precision)
+        } else if (targetValue > y1) {
+            return binarySearch(f, targetValue, [0.5 * (interval[0] + interval[1]), interval[1]], precision)
+        } else {
+            return 0.5 * (interval[0] + interval[1]);
+        }
+    }
+    if (y2 < y0) {
+        // f is decreasing
+        if (targetValue < y2 || targetValue > y0) throw 'no solution on interval'
+        if (targetValue > y1) {
+            return binarySearch(f, targetValue, [interval[0], 0.5 * (interval[0] + interval[1])], precision)
+        } else if (targetValue < y1) {
+            return binarySearch(f, targetValue, [0.5 * (interval[0] + interval[1]), interval[1]], precision)
+        } else {
+            return 0.5 * (interval[0] + interval[1]);
+        }
+    }
+}
+
+getThetas = function(L, r0) {
+    let found = false;
+    let c_i = 0;
+    while (!found) {
+        let theta1 = newtonsMethod(thetaFn, thetaFnPrime, Math.PI * c_i)
+        if (l(0, theta1) > L) {
+            let theta0 = binarySearch(t => l(t, theta1), L, [0, theta1])
+            if (r(theta0) > r0) return [theta0, theta1]
+        }
+        c_i++;
+    }
+}
+
+thetas = getThetas(L, r0)
+
 const svg = d3.select("#chartSvg")
     .attr('height', height)
     .attr('width', width)
@@ -81,23 +121,21 @@ const svg = d3.select("#chartSvg")
 const g = svg.append('g')
     .attr('transform', `translate(${margin.left},${margin.top})`)
 
-let scale = d3.scaleLinear().domain([0,100000]).range([0,400])
-
 let bar1 = g.append('path')
     .attr('d', `M0,0 l${scale(78139)} 0`)
-    .style('stroke-width', '10px')
+    .style('stroke-width', '7px')
     .attr('stroke', '#5a836c')
     .attr('stroke-linecap', "square")
 
 let bar2 = g.append('path')
     .attr('d', `M${scale(78139)} 0 l${-scale(8025) * 1/Math.sqrt(2)} ${scale(8025) * 1/Math.sqrt(2)}`)
-    .style('stroke-width', '10px')
+    .style('stroke-width', '7px')
     .style('stroke', '#4e6cad')
     .attr('stroke-linecap', "square")
 
 let bar3 = g.append('path')
     .attr('d', `M${scale(78139) -scale(8025) * 1/Math.sqrt(2)} ${scale(8025) * 1/Math.sqrt(2)} l${scale(37699) * 1/Math.sqrt(2)} ${scale(37699) * 1/Math.sqrt(2)}`)
-    .style('stroke-width', '10px')
+    .style('stroke-width', '7px')
     .style('stroke', '#f7b414')
     .attr('stroke-linecap', "square")
 
@@ -105,25 +143,29 @@ let bar3 = g.append('path')
 let bar4 = g.append('path')
     .attr('d', `M${scale(78139) -scale(8025) * 1/Math.sqrt(2) + scale(37699) * 1/Math.sqrt(2)} ${scale(8025) * 1/Math.sqrt(2) + scale(37699) * 1/Math.sqrt(2)}` + 
 //               `l${-scale(734952) * 1/Math.sqrt(2)} ${scale(734952) * 1/Math.sqrt(2)}`)
-               `l${-scale(70000) * 1/Math.sqrt(2)} ${scale(70000) * 1/Math.sqrt(2)}`)
-    .style('stroke-width', '10px')
+               `l${-(scale(734952) - L) * 1/Math.sqrt(2)} ${(scale(734952) - L) * 1/Math.sqrt(2)}`)
+    .style('stroke-width', '7px')
     .style('stroke', '#db2a46')
     .attr('stroke-linecap', "square")
 
-let r = d3.scaleLinear()
-    .domain([0, 100000])
-    .range([0, chartWidth / 4])
+// let radius = d3.scaleLinear()
+//     .domain([0, 100000])
+//     .range([0, chartWidth / 4])
 
 let line = d3.lineRadial()
     .radius(d => d[1])
     .angle(d => -d[0] + Math.PI / 2)
 
-let spiralPoints = d3.range(2 * 2*Math.PI, 6.625 * 2*Math.PI, .01).map(t => [-t, 3.5*t-30])
+let spiralPoints = d3.range(thetas[0], thetas[1], .01).map(t => [-t, r(t)])
+
+let spiralCenterX = scale(78139) -scale(8025) * 1/Math.sqrt(2) + scale(37699) * 1/Math.sqrt(2) + -(scale(734952) - L) * 1/Math.sqrt(2) - r(thetas[1]) * Math.cos(thetas[1])
+let spiralCenterY = scale(8025) * 1/Math.sqrt(2) + scale(37699) * 1/Math.sqrt(2) + (scale(734952) - L) * 1/Math.sqrt(2) - r(thetas[1]) * Math.sin(thetas[1])
 
 let spiral = g.append("path")
 	.datum(spiralPoints)
 	.attr("d", line)
     .attr('fill','none')
-    .style('stroke-width', '10px')
+    .style('stroke-width', '7px')
     .style('stroke', '#db2a46')
-    .attr('transform', `translate(${chartWidth/2},${410})`)
+    //.attr('transform', `translate(${chartWidth/2 + 10 },${418})`)
+    .attr('transform', `translate(${spiralCenterX},${spiralCenterY})`)
