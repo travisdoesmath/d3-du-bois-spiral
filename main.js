@@ -64,17 +64,6 @@ function l(t1, t2) {
 thetaFn = t => Math.sin(Math.PI/4 + t) - (2*Math.PI*r0 / w + t) * Math.sin(Math.PI/4 - t)
 thetaFnPrime = t => Math.cos(Math.PI/4 + t) - Math.sin(Math.PI/4 - t) + (2*Math.PI*r0 / w + t) * Math.cos(Math.PI/4 - t)
 
-//get candidate theta1s
-let c_i = 0;
-
-while (false) {
-    theta1 = newtonsMethod(thetaFn, thetaFnPrime, Math.PI * c_i)
-    l1 = Math.sqrt(2) * (x_0 - x_m + x(theta1))
-
-}
-
-
-
 getThetas = function(L, r0) {
     let found = false;
     let c_i = 0;
@@ -97,7 +86,7 @@ thetas = getThetas(L, r0)
 const svg = d3.select("#chartSvg")
     .attr('height', height)
     .attr('width', width)
-    .style('background-image', 'url(original.png)')
+    // .style('background-image', 'url(original.png)')
 
 const g = svg.append('g')
     .attr('transform', `translate(${margin.left},${margin.top})`)
