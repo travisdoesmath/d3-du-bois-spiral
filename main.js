@@ -19,42 +19,39 @@ data = [
 
 let scale = d3.scaleLinear().domain([0,100000]).range([0,351])
 
-function newtonsMethod(fn, fnPrime, startingValue, precision = 0.0001) {
-    let delta = Infinity;
-    let x = startingValue
-    for (let i = 0; i < 10; i++) {
-        let newX = x - fn(x) / fnPrime(x)
-        delta = Math.abs(newX - x);
-        x = newX;
-    }
-    
-    return x;
-}
-
-
 let height = 600;
 let width = 600;
 
 let margin = {
-    top: 38,
+    top: 28,
     right: 20,
     bottom: 20,
-    left: 15
+    left: 23
 }
 
 let chartHeight = height - margin.top - margin.bottom;
 let chartWidth = width - margin.left - margin.right;
 
-
+// constants
 let lineWidth = 10; //24
 let w = 21.5 //36
 let r0 = 19.5;
 //let L = scale(734952);
+let x_0 = scale(78139) -scale(8025) * 1/Math.sqrt(2) + scale(37699) * 1/Math.sqrt(2);
+let x_m = 0.5 * chartWidth;
 //let L = scale(665000);
-let L = scale(648000)
+let L = scale(645000)
 
 function r(t) {
     return r0 + w/(2 * Math.PI) * t;
+}
+
+function x(t) {
+    return r(t) * Math.cos(t);
+}
+
+function y(t) {
+    return r(t) * Math.sin(t);
 }
 
 function l(t1, t2) {
@@ -64,40 +61,19 @@ function l(t1, t2) {
     return I(t2) - I(t1);
 } 
 
-// get theta0 and theta1
 thetaFn = t => Math.sin(Math.PI/4 + t) - (2*Math.PI*r0 / w + t) * Math.sin(Math.PI/4 - t)
 thetaFnPrime = t => Math.cos(Math.PI/4 + t) - Math.sin(Math.PI/4 - t) + (2*Math.PI*r0 / w + t) * Math.cos(Math.PI/4 - t)
 
-function binarySearch(f, targetValue, interval, precision = 0.0001) {
-    if (Math.abs(interval[1] - interval[0]) < precision) return 0.5 * (interval[0] + interval[1]);
+//get candidate theta1s
+let c_i = 0;
 
-    // assuming f is monotonic on interval
-    y0 = f(interval[0])
-    y1 = f(0.5*(interval[0] + interval[1]))
-    y2 = f(interval[1])
-    if (y2 > y0) {
-        // f is increasing
-        if (targetValue > y2 || targetValue < y0) throw 'no solution on interval'
-        if (targetValue < y1) {
-            return binarySearch(f, targetValue, [interval[0], 0.5 * (interval[0] + interval[1])], precision)
-        } else if (targetValue > y1) {
-            return binarySearch(f, targetValue, [0.5 * (interval[0] + interval[1]), interval[1]], precision)
-        } else {
-            return 0.5 * (interval[0] + interval[1]);
-        }
-    }
-    if (y2 < y0) {
-        // f is decreasing
-        if (targetValue < y2 || targetValue > y0) throw 'no solution on interval'
-        if (targetValue > y1) {
-            return binarySearch(f, targetValue, [interval[0], 0.5 * (interval[0] + interval[1])], precision)
-        } else if (targetValue < y1) {
-            return binarySearch(f, targetValue, [0.5 * (interval[0] + interval[1]), interval[1]], precision)
-        } else {
-            return 0.5 * (interval[0] + interval[1]);
-        }
-    }
+while (false) {
+    theta1 = newtonsMethod(thetaFn, thetaFnPrime, Math.PI * c_i)
+    l1 = Math.sqrt(2) * (x_0 - x_m + x(theta1))
+
 }
+
+
 
 getThetas = function(L, r0) {
     let found = false;
@@ -106,10 +82,14 @@ getThetas = function(L, r0) {
         let theta1 = newtonsMethod(thetaFn, thetaFnPrime, Math.PI * c_i)
         if (l(0, theta1) > L) {
             let theta0 = binarySearch(t => l(t, theta1), L, [0, theta1])
-            if (r(theta0) > r0) return [theta0, theta1]
+            if (r(theta0) > r0) {
+                console.log('c_i', c_i)
+                return [theta0, theta1]
+            }
         }
         c_i += 2;
     }
+    
 }
 
 thetas = getThetas(L, r0)
@@ -117,7 +97,7 @@ thetas = getThetas(L, r0)
 const svg = d3.select("#chartSvg")
     .attr('height', height)
     .attr('width', width)
-    // .style('background-image', 'url(original.png)')
+    .style('background-image', 'url(original.png)')
 
 const g = svg.append('g')
     .attr('transform', `translate(${margin.left},${margin.top})`)
