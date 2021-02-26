@@ -1,18 +1,18 @@
 data = [
     {
-        label: 'cities of over 10,000 inhabitants',
+        label: 'in cities of over 10k inhabitants',
         value: 78139
     },
     {
-        label: 'cities from 5,000 to 10,000',
+        label: 'in cities from 5k to 10k',
         value: 8025
     },
     {
-        label: 'cities from 2,500 to 5,000',
+        label: 'in cities from 2.5k to 5k',
         value: 37699
     },
     {
-        label: 'the country and villages',
+        label: 'in the country and villages',
         value: 734952
     }
 ]
@@ -32,15 +32,9 @@ let margin = {
 let chartHeight = height - margin.top - margin.bottom;
 let chartWidth = width - margin.left - margin.right;
 
-// constants
 let lineWidth = 10
 let w = 21.7
 let r_0 = 8
-let L = scale(734952);
-// let x_0 = scale(78139) + 0.5 * Math.sqrt(2) * (-scale(8025) + scale(37699));
-let x_m = 0.5 * chartWidth - 5;
-//let L = scale(665000);
-//let l_2 = scale(644500)
 
 function r(t) {
     return r_0 + w/(2 * Math.PI) * t;
@@ -105,38 +99,23 @@ getParamaters = function(L, r_0, x_0, x_m) {
 const svg = d3.select("#chartSvg")
     .attr('height', height)
     .attr('width', width)
+
+const showOriginalButton = d3.select('#showOriginal').on('click', function() {
+    if (svg.style('background-image') == 'url("original.png")') {
+        svg.style('background-image', 'none')
+        d3.select(this).text('Show Original')
+    } else {
+        svg.style('background-image', 'url("original.png")')
+        d3.select(this).text('Hide Original')
+    }
+
+})
     // .style('background-image', 'url(original.png)')
 
 const defs = svg.append('defs')
 
 const g = svg.append('g')
     .attr('transform', `translate(${margin.left},${margin.top})`)
-
-
-
-defs.append('marker')
-    .attr('viewBox', '0 0 1 1')
-    //.attr('refX', '1')
-    .attr('refY', '0.5')
-    .attr('markerWidth', '1')
-    .attr('markerHeight', '1')
-    .attr('markerUnits','strokeWidth')
-    .attr('orient','auto')
-    .attr('id', 'left-triangle')
-    .append('path')
-    .attr('d', 'M0 0 l1 0 l-1 1 z')
-
-defs.append('marker')
-    .attr('viewBox', '0 0 1 1')
-    //.attr('refX', '1')
-    .attr('refY', '0.5')
-    .attr('markerWidth', '1')
-    .attr('markerHeight', '1')
-    .attr('markerUnits','strokeWidth')
-    .attr('orient','auto-start-reverse')
-    .attr('id', 'right-triangle')
-    .append('path')
-    .attr('d', 'M0 0 l0 1 l1 0 z')
 
 let line = d3.lineRadial()
     .radius(d => d[1])
@@ -156,6 +135,19 @@ for (let i = 0; i < data.length; i++) {
             .attr('d', `M${x_0},${y_0} L${x_1} ${y_1}`)
             .style('stroke-width', `${lineWidth}px`)
             .attr('stroke', colors[i])
+
+        g.append('text')
+            .attr('x', x_0)
+            .attr('y', y_0 + lineWidth)
+            .attr('dy', 10)
+            .text(datum.value.toLocaleString())
+
+        g.append('text')
+            .attr('x', x_0)
+            .attr('y', y_0 + lineWidth)
+            .attr('dy', 24)
+            .text(datum.label)
+            .attr('font-size', '12px')
 
         x_0 = x_1 - (0.5*Math.sqrt(2) * lineWidth);
         y_0 += (0.5*lineWidth)
@@ -201,10 +193,27 @@ for (let i = 0; i < data.length; i++) {
             .attr('marker-end', `url('#marker${i}-end')`)
             .style('shape-rendering', 'crispedges')
 
+        g.append('text')
+            .attr('x', 0.5 * (x_0 + x_1) - (-1)**i * 15)
+            .attr('y', 0.5 * (y_0 + y_1))
+            .attr('dy', 10)
+            .attr('text-anchor', i % 2 == 0 ? 'end' : 'start')
+            .text(datum.value.toLocaleString())
+
+        g.append('text')
+            .attr('x', 0.5 * (x_0 + x_1) - (-1)**i * 15)
+            .attr('y', 0.5 * (y_0 + y_1))
+            .attr('dy', 24)
+            .attr('text-anchor', i % 2 == 0 ? 'end' : 'start')
+            .text(datum.label)
+            .attr('font-size', '12px')
+
         x_0 = x_1;
         y_0 = y_1;
 
     } else {
+        let L = scale(datum.value);
+        let x_m = 0.5 * chartWidth - 5;
 
         params = getParamaters(L, r_0, x_0, x_m)
 
@@ -243,10 +252,26 @@ for (let i = 0; i < data.length; i++) {
             .attr('fill','none')
             .style('stroke-width', `${lineWidth}px`)
             .style('stroke', '#db2a46')
-            // .style('stroke', 'black')
-            // .style('opacity', 0.5)
-            //.attr('transform', `translate(${chartWidth/2 + 10 },${418})`)
             .attr('transform', `translate(${spiralCenterX},${spiralCenterY})`)
+
+        g.append('text')
+            .attr('x', spiralCenterX + 0.25 * w)
+            .attr('y', spiralCenterY)
+            .attr('dy', 5)
+            .attr('text-anchor', 'middle')
+            .text(datum.value.toLocaleString())
+
+        let textSpiralPoints = d3.range( params.theta_1 + 1.47 * Math.PI, params.theta_1 + Math.PI, -.01).map(t => [-t, r(t)])
+
+        g.append("path")
+            .datum(textSpiralPoints)
+            .attr('id', 'spiralTextPath')
+            .attr("d", line)
+            .attr('fill','none')
+            .attr('transform', `translate(${spiralCenterX},${spiralCenterY})`)
+
+        g.append('text').append('textPath').attr('href','#spiralTextPath')           
+            .text(datum.label)
             
     }
 
