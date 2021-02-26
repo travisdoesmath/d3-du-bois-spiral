@@ -108,9 +108,24 @@ const showOriginalButton = d3.select('#showOriginal').on('click', function() {
         svg.style('background-image', 'url("original.png")')
         d3.select(this).text('Hide Original')
     }
-
 })
-    // .style('background-image', 'url(original.png)')
+
+let showAnnotations = true;
+const annotationsButton = d3.select('#annotations').on('click', function() {
+    if (showAnnotations) {
+        svg.selectAll('text')
+            .transition()
+            .style('opacity', 0)
+        d3.select(this).text('Show Annotations')
+        showAnnotations = false;
+    } else {
+        svg.selectAll('text')
+            .transition()
+            .style('opacity', 1)
+        d3.select(this).text('Hide Annotations')
+        showAnnotations = true;
+    }
+})
 
 const defs = svg.append('defs')
 
