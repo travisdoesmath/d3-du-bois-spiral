@@ -79,9 +79,7 @@ getParamaters = function(L, r_0, x_0, x_m) {
         let l_2 = L - l_1
         if (l(0, theta_1) > l_2 && yPrime(theta_1) < 0 && l_1 > 0) {
             let theta_0 = binarySearch(t => l(t, theta_1), l_2, [0, theta_1])
-            console.log('theta_0', theta_0, 'r(theta_0)', r(theta_0))
             if (r(theta_0) > r_0) {
-                console.log('c_i: ', c_i)
                 return {
                     theta_0: theta_0,
                     theta_1: theta_1,
@@ -286,40 +284,6 @@ for (let i = 0; i < data.length; i++) {
             .attr('transform', `translate(${spiralCenterX},${spiralCenterY})`)
 
         g.append('text').append('textPath').attr('href','#spiralTextPath')           
-            .text(datum.label)
-            
+            .text(datum.label)       
     }
-
 }
-
-
-// let bar1 = g.append('path')
-//     .attr('d', `M0,0 l${scale(78139)} 0`)
-//     .style('stroke-width', `${lineWidth}px`)
-//     .attr('stroke', '#5a836c')
-//     .attr('stroke-linecap', "square")
-
-// let bar2 = g.append('path')
-//     .attr('d', `M${scale(78139)} 0 l${-scale(8025) * 1/Math.sqrt(2)} ${scale(8025) * 1/Math.sqrt(2)}`)
-//     .style('stroke-width', `${lineWidth}px`)
-//     .style('stroke', '#4e6cad')
-//     .attr('stroke-linecap', "square")
-
-//     //db2a46
-// let bar4 = g.append('path')
-//     .attr('d', `M${scale(78139) -scale(8025) * 1/Math.sqrt(2) + scale(37699) * 1/Math.sqrt(2)} ${scale(8025) * 1/Math.sqrt(2) + scale(37699) * 1/Math.sqrt(2)}` + 
-//                `l${-(scale(734952) - params.l_2) * 1/Math.sqrt(2)} ${(scale(734952) - params.l_2) * 1/Math.sqrt(2)}`)
-//     .style('stroke-width', `${lineWidth}px`)
-//     .style('stroke', '#db2a46')
-//     // .attr('stroke-linecap', "square")
-
-// let bar3 = g.append('path')
-//     .attr('d', `M${scale(78139) -scale(8025) * 1/Math.sqrt(2)} ${scale(8025) * 1/Math.sqrt(2)} l${scale(37699) * 1/Math.sqrt(2)} ${scale(37699) * 1/Math.sqrt(2)}`)
-//     .style('stroke-width', `${lineWidth}px`)
-//     .style('stroke', '#f7b414')
-//     //.attr('stroke-linecap', "square")
-//     .attr('marker-start', 'url(#right-triangle)')
-//     .attr('marker-end', 'url(#left-triangle)')
-
-
-//let spiralPoints = d3.range(thetas[0], thetas[1], .01).map(t => [-t, r(t)])
